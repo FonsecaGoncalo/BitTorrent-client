@@ -18,11 +18,8 @@ class Info:
         self.files = files
         self.path = path
 
-    def __str__(self) -> str:
-        return super().__str__()
 
-
-def decode(bencode_string):
+def decode(bencode_string) -> MetaInfoFile:
     meta_info_decoded = bdecode(bencode_string)
     print(meta_info_decoded)
     announce = meta_info_decoded[b"announce"]
@@ -37,7 +34,4 @@ def decode(bencode_string):
 
     return MetaInfoFile(announce, info)
 
-
-t = open("superman.torrent", "rb").readlines()
-print(decode(b"".join(t)))
 
