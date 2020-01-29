@@ -4,6 +4,7 @@ from typing import List
 
 from bencode import bdecode, bencode
 from hashlib import sha1
+from tracker import Tracker
 
 
 class Info:
@@ -19,10 +20,14 @@ class Info:
 
 class Torrent(object):
 
-    def __init__(self, announce, info, info_hash):
+    def __init__(self, announce, info, info_hash, tracker):
         self.announce = announce
         self.info = info
         self.info_hash = info_hash
+        self.tracker = tracker
+
+    def order_trackers(self):
+        self.tracker.order_trackers()
 
     @classmethod
     def decode(cls, bencoded_meta_info: bytes) -> Torrent:
@@ -45,14 +50,18 @@ class Torrent(object):
                     info_decoded.get(b"files"),
                     info_decoded.get(b"path"))
 
-        return cls(announce_decoded, info, info_hash)
+        tracker = cls._build_tracker(info_hash, announce_decoded)
+
+        return cls(announce_decoded, info, info_hash, tracker)
+
+    @staticmethod
+    def _build_tracker(info_hash: bytes, announces: List[List[str]]) -> Tracker:
+        return Tracker(info_hash, announces)
 
     @staticmethod
     def _get_announce_decoded(meta_info_decoded: dict) -> List[List[str]]:
-        """
-         BEP 12 http://bittorrent.org/beps/bep_0012.html
-         If the "announce-list" key is present, ignore the "announce" key and only use the URLs in "announce-list"
-         """
+        # BEP 12 http://bittorrent.org/beps/bep_0012.html
+        # If the "announce-list" key is present, ignore the "announce" key and only use the URLs in "announce-list"
         if b"announce-list" in meta_info_decoded:
             announce = meta_info_decoded[b"announce-list"]
         else:
