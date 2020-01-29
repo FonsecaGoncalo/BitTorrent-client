@@ -1,5 +1,4 @@
 import random
-import socket
 from enum import Enum, unique
 from typing import List
 from urllib.parse import urlencode
@@ -20,16 +19,12 @@ class Tracker:
         self.left = None
 
     def order_trackers(self):
-        print(self.announce)
         for tier in self.announce:
             for tracker in tier:
                 try:
                     tier.remove(tracker)
                     url = self._build_url(tracker)
-                    print(url)
-                    response = urlopen(url)
-                    print(response.getcode())
-                    print(response.read())
+                    response = urlopen(url, timeout=5)
                     if response.getcode() == 200:
                         tier.insert(0, tracker)
                     else:
