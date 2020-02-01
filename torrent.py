@@ -36,9 +36,7 @@ class Torrent(object):
     @classmethod
     def decode(cls, encoded_meta_info: bytes) -> Torrent:
         meta_info_decoded = bdecode(encoded_meta_info)
-        print(meta_info_decoded)
         info_decoded = meta_info_decoded[b"info"]
-        print(info_decoded)
         info_hash = sha1(bencode(info_decoded)).digest()
 
         announce_decoded = cls._get_announce_decoded(meta_info_decoded)

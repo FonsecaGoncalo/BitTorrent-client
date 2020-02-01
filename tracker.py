@@ -1,8 +1,10 @@
 import random
 from enum import Enum, unique
-from typing import List
+from typing import List, Tuple, Iterable
 from urllib.parse import urlencode
 from urllib.request import urlopen
+from struct import unpack
+from bencoder import bdecode
 
 
 class Tracker:
@@ -23,17 +25,36 @@ class Tracker:
             for tracker in tier:
                 try:
                     tier.remove(tracker)
-                    url = self._build_url(tracker)
-                    print(url)
-                    response = urlopen(url, timeout=5)
-                    print(response.info())
-                    print(response.read())
-                    if response.getcode() == 200:
-                        tier.insert(0, tracker)
-                    else:
-                        tier.append(tracker)
+                    self.request_peers(tracker)
+                    tier.insert(0, tracker)
                 except Exception:
                     tier.append(tracker)
+
+    def request_peers(self, tracker) -> Iterable[Tuple[str, int]]:
+        url = self._build_url(tracker)
+        response_encoded = urlopen(url, timeout=5)
+
+        if response_encoded.getcode() != 200:
+            raise ConnectionError
+
+        response = bdecode(response_encoded.read())
+        peers = response[b'peers']
+        # peers is be a string consisting of multiples of 6 byte
+        peers_ips = list(map(lambda index: peers[index: index + 6], range(0, len(peers), 6)))
+
+        def decode_peers(buffer) -> Tuple[str, int]:
+            # First 4 bytes are the IP address and last 2 bytes are the port number.
+            # All in network (big endian) notation
+
+            # ! - network (= big-endian)
+            # 4B - 4 * unsigned char -> integer
+            # H - unsigned short ->  integer
+            fmt = "!4BH"
+            *ip_list, port = unpack(fmt, buffer)
+            list_port = ".".join(map(str, ip_list)), port
+            return list_port
+
+        return list(map(decode_peers, peers_ips))
 
     def _build_url(self, tracker):
         query_params = {
