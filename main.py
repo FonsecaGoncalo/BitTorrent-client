@@ -1,7 +1,7 @@
 from torrent import Torrent
 
 # read and parse the metainfo file (.torrent)
-file = b"".join(open("torrentFiles/CentOS-7-x86_64-NetInstall-1708.torrent", "rb").readlines())
+file = open("torrentFiles/Charlie_Chaplin_Mabels_Strange_Predicament.avi.torrent", "rb").read()
 torrentt = Torrent.decode(file)
 
 # Connect to tracker to get peers

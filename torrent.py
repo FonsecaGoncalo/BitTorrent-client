@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import asyncio
+from hashlib import sha1
 from typing import List
 
-from bencode import bdecode, bencode
-from hashlib import sha1
+from bencoder import bencode, bdecode
+
 from tracker import Tracker
 
 
@@ -16,11 +18,13 @@ class Info:
         self.length = length
         self.files = files
         self.path = path
+        self.queue = asyncio.Queue(50)
 
 
 class Torrent(object):
 
     def __init__(self, announce, info, info_hash, tracker):
+        self.server = None
         self.announce = announce
         self.info = info
         self.info_hash = info_hash
@@ -30,11 +34,11 @@ class Torrent(object):
         self.tracker.order_trackers()
 
     @classmethod
-    def decode(cls, bencoded_meta_info: bytes) -> Torrent:
-        meta_info_decoded = bdecode(bencoded_meta_info)
-
+    def decode(cls, encoded_meta_info: bytes) -> Torrent:
+        meta_info_decoded = bdecode(encoded_meta_info)
+        print(meta_info_decoded)
         info_decoded = meta_info_decoded[b"info"]
-
+        print(info_decoded)
         info_hash = sha1(bencode(info_decoded)).digest()
 
         announce_decoded = cls._get_announce_decoded(meta_info_decoded)
@@ -64,10 +68,9 @@ class Torrent(object):
         # If the "announce-list" key is present, ignore the "announce" key and only use the URLs in "announce-list"
         if b"announce-list" in meta_info_decoded:
             announce = meta_info_decoded[b"announce-list"]
+            return [list(map(lambda tracker: tracker.decode("utf-8"), trackers)) for trackers in announce]
         else:
-            announce = meta_info_decoded[b"announce"]
-
-        return [list(map(lambda tracker: tracker.decode("utf-8"), trackers)) for trackers in announce]
+            return [[meta_info_decoded[b"announce"].decode("utf-8")]]
 
     @staticmethod
     def _split_pieces(pieces: bytes, piece_size: int) -> List[bytes]:

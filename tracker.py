@@ -14,9 +14,9 @@ class Tracker:
         self.announce = self._shuffle_announce(announce)
         self.event = None
         self.ip = None
-        self.uploaded = None
-        self.downloaded = None
-        self.left = None
+        self.uploaded = 0
+        self.downloaded = 0
+        self.left = 0
 
     def order_trackers(self):
         for tier in self.announce:
@@ -24,7 +24,10 @@ class Tracker:
                 try:
                     tier.remove(tracker)
                     url = self._build_url(tracker)
+                    print(url)
                     response = urlopen(url, timeout=5)
+                    print(response.info())
+                    print(response.read())
                     if response.getcode() == 200:
                         tier.insert(0, tracker)
                     else:
