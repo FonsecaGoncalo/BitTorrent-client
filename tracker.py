@@ -39,7 +39,7 @@ class Tracker:
 
         response = bdecode(response_encoded.read())
         peers = response[b'peers']
-        # peers is be a string consisting of multiples of 6 byte
+        # peers is a string consisting of multiples of 6 byte
         peers_ips = list(map(lambda index: peers[index: index + 6], range(0, len(peers), 6)))
 
         def decode_peers(buffer) -> Tuple[str, int]:
@@ -51,8 +51,7 @@ class Tracker:
             # H - unsigned short ->  integer
             fmt = "!4BH"
             *ip_list, port = unpack(fmt, buffer)
-            list_port = ".".join(map(str, ip_list)), port
-            return list_port
+            return ".".join(map(str, ip_list)), port
 
         return list(map(decode_peers, peers_ips))
 
