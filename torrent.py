@@ -6,7 +6,7 @@ from typing import List
 
 from bencoder import bencode, bdecode
 
-from tracker import Tracker
+from trackers import Trackers
 
 
 class Info:
@@ -57,8 +57,8 @@ class Torrent(object):
         return cls(announce_decoded, info, info_hash, tracker)
 
     @staticmethod
-    def _build_tracker(info_hash: bytes, announces: List[List[str]]) -> Tracker:
-        return Tracker(info_hash, announces)
+    def _build_tracker(info_hash: bytes, announces: List[List[str]]) -> Trackers:
+        return Trackers(info_hash, announces)
 
     @staticmethod
     def _get_announce_decoded(meta_info_decoded: dict) -> List[List[str]]:

@@ -5,9 +5,10 @@ from urllib.parse import urlencode
 from urllib.request import urlopen
 from struct import unpack
 from bencoder import bdecode
+from peer import Peer
 
 
-class Tracker:
+class Trackers:
 
     def __init__(self, info_hash: bytes, announce: List[List[str]]):
         self.info_hash = info_hash
@@ -30,7 +31,7 @@ class Tracker:
                 except Exception:
                     tier.append(tracker)
 
-    def request_peers(self, tracker) -> Iterable[Tuple[str, int]]:
+    def request_peers(self, tracker) -> Iterable[Peer]:
         url = self._build_url(tracker)
         response_encoded = urlopen(url, timeout=5)
 
@@ -42,7 +43,7 @@ class Tracker:
         # peers is a string consisting of multiples of 6 byte
         peers_ips = list(map(lambda index: peers[index: index + 6], range(0, len(peers), 6)))
 
-        def decode_peers(buffer) -> Tuple[str, int]:
+        def decode_peers(buffer) -> Peer:
             # First 4 bytes are the IP address and last 2 bytes are the port number.
             # All in network (big endian) notation
 
@@ -51,7 +52,8 @@ class Tracker:
             # H - unsigned short ->  integer
             fmt = "!4BH"
             *ip_list, port = unpack(fmt, buffer)
-            return ".".join(map(str, ip_list)), port
+            Peer(".".join(map(str, ip_list)), port).connect(self.info_hash)
+            return Peer(".".join(map(str, ip_list)), port)
 
         return list(map(decode_peers, peers_ips))
 
