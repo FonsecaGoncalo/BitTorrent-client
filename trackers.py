@@ -13,7 +13,7 @@ class Trackers:
     def __init__(self, info_hash: bytes, announce: List[List[str]]):
         self.info_hash = info_hash
         self.port = 6881
-        self.peer_id = "-PY00000000000000000"
+        self.peer_id = b"-NL0001-NOOBLEARNING"
         self.announce = self._shuffle_announce(announce)
         self.event = None
         self.ip = None
@@ -52,7 +52,6 @@ class Trackers:
             # H - unsigned short ->  integer
             fmt = "!4BH"
             *ip_list, port = unpack(fmt, buffer)
-            Peer(".".join(map(str, ip_list)), port).connect(self.info_hash)
             return Peer(".".join(map(str, ip_list)), port)
 
         return list(map(decode_peers, peers_ips))

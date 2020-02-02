@@ -3,6 +3,7 @@ from struct import pack
 
 PSTR = b"BitTorrent protocol"
 PEER_ID = b"-NL0001-NOOBLEARNING"
+RESERVED = b"\x00" * 8
 
 
 class Peer:
@@ -11,23 +12,27 @@ class Peer:
         self.ip = ip
         self.port = port
 
-    def connect(self, info_hash=""):
-        print("here")
-        with socket.socket() as s:
-            try:
-                # s.bind(("127.0.0.1", 5000))
-                print(self.ip, self.port)
-                s.connect_ex((self.ip, self.port))
-                print(s)
-                print("Trying to handshake")
-                handshake = Peer._handshake(info_hash)
-                print(handshake)
-                s.send(handshake)
-                print("data")
-                data = s.recv(68)
-                print(data)
-            except Exception as e:
-                print(e)
+#    def connect(self, info_hash=""):
+#        print("here")
+#        with socket.socket() as s:
+#            try:
+#                print(self.ip, self.port)
+#                s.connect((self.ip, self.port))
+#                print(s)
+#                print("Trying to handshake")
+#                handshake = Peer._handshake(info_hash)
+#                print(handshake)
+#                s.send(handshake)
+#                bitfieald = self._bitfield()
+#                print(bitfieald)
+#                s.send(bitfieald)
+#                while True:
+#                    data = s.recv(68)
+#                    if len(data) > 0:
+#                        print("data")
+#                        print(data)
+#            except Exception as e:
+#                print(e)
 
     @staticmethod
     def _handshake(info_hash):
@@ -44,4 +49,10 @@ class Peer:
         #   This is the same info_hash that is transmitted in tracker requests.
         #
         # peer_id: 20-byte string used as a unique ID for the client.
-        return pack(f">Bssss", len(PSTR), PSTR, b"00000000", info_hash, PEER_ID)
+        return pack(f">B{len(PSTR)}s8s20s20s", len(PSTR), PSTR, RESERVED, info_hash, PEER_ID)
+
+    @staticmethod
+    def _bitfield():
+        # bitfield: <len=0001+X><id=5><bitfield>
+        array = bytearray(b"\x00" * 1304)
+        return pack(f">IB{len(array)}s", 1305, 5, array)
